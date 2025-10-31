@@ -25,7 +25,7 @@ class UniformExploration(StochasticBanditStrategy):
 
   def choose_arm(self) -> int:
     if self.num_rounds_so_far < self.num_times_explore * self.num_arms:
-      return self.num_rounds_so_far
+      return self.num_rounds_so_far % self.num_arms
     else:
       return self.best_arm
 
