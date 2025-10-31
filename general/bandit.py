@@ -23,7 +23,7 @@ class Bandit(ABC):
 class FiniteArmedStochasticBandit(Bandit):
     def __init__(self, arms: List[BanditArm]) -> None:
         self.arms = arms
-    def fix_probabilistic_state(self) -> None:
+    def process_context(self, context: Optional[np.ndarray]) -> None:
         for arm in self.arms:
             arm.fix_probabilistic_state()
     def pull_arm(self, arm: int) -> float:
@@ -55,7 +55,3 @@ class GaussianBanditArm:
     def pull(self) -> float:
         return self.observed_value
 
-
-# contextual bandits
-
-class 

@@ -6,24 +6,29 @@ from typing import Callable
 def simulate_contextual(
     strats: List[ContextualBanditStrategy],
     bandit: ContextualBandit,
-    context_generator: Callable[[], List[float]],
+    context_generator: Callable[[], np.ndarray],
     num_rounds: int,
-    num_simulations: int
-) -> List[List[float]]:
-    results = [[] for _ in range(len(strats))]
-    for i in range(num_simulations):
-        for j in range(num_rounds):
-            context = context_generator()
-            bandit.fix_probabilistic_state(context)
-            for k, strat in enumerate(strats):
-                arm = strat.choose_arm()
-                result = bandit.pull_arm(arm)
-                results[k].append(result)
-                strat.record_result(context, arm, result)
+) -> np.ndarray:
+    results = np.empty((len(strats), num_rounds))
+    for i in range(num_rounds):
+        context = context_generator()
+        bandit.fix_probabilistic_state(context)
+        for j, strat in enumerate(strats):
+            arm = strat.choose_arm(context)
+            result = bandit.pull_arm(arm)
+            results[j, i] = result
+            strat.record_result(arm, result)
                 
     return results
 
 
-# print(simulate([MyStrategy()], SimpleBandit([0.1, 0.9]), 1000, 10))
-results = simulate([ThompsonSamplingBeta(2)], BernoulliBandit([0.1, 0.9]), 10, 1)
+results = simulate_contextual(
+    [DiscreteEpsilonGreedyStrategy(0, 1, 4, 3, 2, 0.1)],
+    FiniteArmedContextualBandit([
+        GaussianLinearBanditArm(np.array([0.1, 0.2, 0.4])),
+        GaussianLinearBanditArm(np.array([0.1, 0.05, 0.0])),
+    ]),
+    lambda: np.array([0.5, 0.5, 0.5]),
+    1000
+)
 print(np.sum(results))

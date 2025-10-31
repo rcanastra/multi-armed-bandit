@@ -2,6 +2,12 @@ from typing import List
 from abc import ABC, abstractmethod
 import numpy as np
 
+class ContextualBanditArm(ABC):
+    def fix_probabilistic_state(self, context: np.ndarray) -> None:
+        pass
+    def pull(self) -> float:
+        pass
+
 class Bandit(ABC):
     @abstractmethod
     def pull_arm(self, n: int) -> float:
@@ -9,13 +15,23 @@ class Bandit(ABC):
 
 class ContextualBandit(Bandit):
     @abstractmethod
-    def fix_probabilistic_state(self, context: List[float]) -> None:
+    def fix_probabilistic_state(self, context: np.ndarray) -> None:
         pass
 
     @abstractmethod
     def pull_arm(self, n: int) -> float:
         pass
 
+
+class FiniteArmedContextualBandit(Bandit):
+    def __init__(self, arms: List[ContextualBanditArm]) -> None:
+        self.arms = arms
+    def fix_probabilistic_state(self, context: np.ndarray) -> None:
+        for arm in self.arms:
+            arm.fix_probabilistic_state(context)
+    def pull_arm(self, arm: int) -> float:
+        return self.arms[arm].pull()
+    
 class GaussianLinearBandit(Bandit):
     # mu(a | x) = x * Theta
     # a is a vector and Theta is a matrix
@@ -43,4 +59,20 @@ class SinusoidalBandit(Bandit):
 
     def pull_arm(self, n: int) -> float:
         return self.rewards[n]
+    
+
+class GaussianLinearBanditArm(ContextualBanditArm):
+    # mu(a | x) = x * theta
+    # a, x, theta are vectors
+    # we will also assume a is distributed gaussian with variance 1
+    def __init__(self, theta: np.ndarray, sigma: float = 1) -> None:
+        self.theta = theta
+        self.sigma = sigma
+    
+    def fix_probabilistic_state(self, context: np.ndarray) -> None:
+        mean = np.dot(self.theta, context)
+        self.reward = np.random.normal(mean, 1)
+
+    def pull(self) -> float:
+        return self.reward
     

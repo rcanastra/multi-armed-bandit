@@ -96,7 +96,7 @@ class ThompsonSamplingBeta(StochasticBanditStrategy):
             self.beta_params[0][arm] += 1.0
         else:
             self.beta_params[1][arm] += 1.0
-        
+
 
 # this is a pain to code
 # class ConjugateThompsonSampling(StochasticBanditStrategy):
